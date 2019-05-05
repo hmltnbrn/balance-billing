@@ -1,0 +1,30 @@
+{
+  "name": "balance-billing",
+  "version": "1.0.0",
+  "description": "Commonwealth Fund Balance Billing Infographic",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm start",
+    "start": "node server",
+    "babel": "./node_modules/.bin/babel ./script.js --out-dir lib",
+    "postcss": "postcss styles.css --dir lib"
+  },
+  "author": "Brian Hamilton",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/polyfill": "^7.2.5",
+    "compression": "^1.7.3",
+    "express": "^4.16.4",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.3.4",
+    "@babel/plugin-transform-arrow-functions": "^7.2.0",
+    "@babel/plugin-transform-spread": "^7.2.2",
+    "@babel/preset-env": "^7.3.4",
+    "autoprefixer": "^9.4.10",
+    "babel-plugin-transform-es2015-template-literals": "^6.22.0",
+    "postcss-cli": "^6.1.2"
+  }
+}

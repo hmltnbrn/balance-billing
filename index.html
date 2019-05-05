@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commonwealth Fund - Balance Billing Infographic</title>
+  <link href="./styles.css" rel="stylesheet" type="text/css">
+  <!-- <link href="./lib/styles.css" rel="stylesheet" type="text/css"> -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="body-container">
+    <div class="graph-top-container">
+      <div class="graph-container">
+        <div class="state-viz"></div>
+        <div class="state-legend"></div>
+      </div>
+      <div class="state-info-container">
+        <h2 class="state-name">Select a state</h2>
+        <p class="initial-main-text">Click on a state to learn how it protects consumers against balance billing</p>
+        <h3 class="billing-type"></h3>
+        <div class="full-state-info">
+          <div class="horiz-rule"></div>
+          <h4>PROTECTIONS AVAILABLE</h4>
+          <ul class="main-text"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="notes-container">
+      <div class="horiz-rule"></div>
+      <div class="inner-notes">
+        <h2>NOTES</h2>
+        <div class="the-notes"></div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.2.5/polyfill.min.js"></script>
+  <script type="text/javascript">
+    (function () {
+      if (window.NodeList && !NodeList.prototype.forEach) {
+        NodeList.prototype.forEach = Array.prototype.forEach;
+      }
+      if ( typeof window.CustomEvent === "function" ) return false;
+      function CustomEvent ( event, params ) {
+        params = params || { bubbles: false, cancelable: false, detail: null };
+        var evt = document.createEvent( 'CustomEvent' );
+        evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+        return evt;
+      }
+      CustomEvent.prototype = window.Event.prototype;
+      window.CustomEvent = CustomEvent;
+    })();
+  </script>
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <script src="https://d3js.org/d3-queue.v3.min.js"></script>
+  <script type="text/javascript" src="./script.js"></script>
+  <!-- <script type="text/javascript" src="./lib/script.js"></script> -->
+</body>
+</html>

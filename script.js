@@ -39,224 +39,252 @@
     return this;
   }
 
+  var toolDiv = d3.select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var selection = document.getElementById("state-selector");
+
+  selection.addEventListener("click", function(e) {
+    if(e.target.value !== 'default') {
+      document.querySelector(`.state-${e.target.value.replace(/ /g,'')}`).dispatchEvent(new CustomEvent('click'));
+    }
+  });
+
   d3.queue()
     .defer(d3.json, 'https://script.google.com/macros/s/AKfycbyTmE8QWxsNvYgJ3RQepS6Rtrchu8FPF66m-32o9eHjaywBLMQ/exec?id=1Emks_kAXoj0U8nBQME7X16aP5IyCBDDZGFtewNI70LI')
     .defer(d3.json, 'data/states-abrev.json')
-    .await(renderAll);
+    .await(checkSize);
 
-    function renderAll(error, data, abrev) {
-      renderMap();
+  var cachedWidth = window.innerWidth;
+  window.addEventListener('resize', function(){
+    var newWidth = window.innerWidth;
+    if(newWidth !== cachedWidth) {
+      cachedWidth = newWidth;
+      checkSize();
+    }
+  });
+  window.addEventListener('orientationchange', checkSize);
 
-      function renderMap() {
-        var width = 500;
-        var height = 350;
-        var scale = 700;
-        var mobile = false;
-        var clicked = false;
+  var data;
+  var abrev;
+  var firstTime = true;
+  var mobile = false;
 
-        if(screen.width <= 768) {
-          mobile = true;
-          // d3.select(".aca-viz-top-container")
-          //     .style("flex-direction", "column")
-          //     .style("align-items", "center");
-          // d3.select(".aca-state-info")
-          //     .style("max-width", "75%")
-          //     .style("padding-left", 5)
-          //     .style("padding-bottom", 50);
-          // d3.select("#aca-selector")
-          //     .style("height", 50)
-          //     .style("font-size", 25);
-          width = parseInt(d3.select(".body-container").style("width"));
-          height = 500;
-          scale = 1000;
-        }
+  function checkSize(error, dataFull, abrevFull) {
+    if(firstTime) {
+      data = dataFull;
+      abrev = abrevFull;
+      firstTime = false;
+    }
+    if(screen.width <= 768 || window.innerWidth <= 768) {
+      mobile = true;
+    }
+    else {
+      mobile = false;
+    }
+    renderMap();
+  }
 
-        var projection = d3.geo.albersUsa()
-          .translate([width/2, height/2])
-          .scale([scale]);
-                
-        var path = d3.geo.path()
-          .projection(projection);
+  function renderMap() {
+    var width = 500;
+    var height = 350;
+    var scale = 700;
+    var clicked = false;
 
-        var color = d3.scale.linear();
+    if(mobile) {
+      d3.select(".graph-top-container")
+        .style("flex-direction", "column");
+      d3.select(".selection-container").show();
+      d3.select(".initial-main-text").hide();
+      d3.select(".state-info-container").select("h2").text("");
+      width = parseInt(d3.select(".body-container").style("width")) - 40;
+      height = width - 50;
+      if((screen.width <= 768 || window.innerWidth <= 768) && (screen.width >= 600 || window.innerWidth >= 600)) {
+        height = width - 200;
+      }
+      scale = width + 100;
+    }
 
-        color
-          .domain([0,1,2])
-          .range(["#e5e5e5", "#93d7d6", "#49bdba"]);
+    var projection = d3.geo.albersUsa()
+      .translate([width/2, height/2])
+      .scale([scale]);
+            
+    var path = d3.geo.path()
+      .projection(projection);
 
-        d3.select(".the-us-map").remove();
+    var color = d3.scale.linear();
 
-        var svg = d3.select(".state-viz")
-          .append("svg")
-          .attr("class", "the-us-map")
-          .attr("width", width)
-          .attr("height", height)
-          .on("click", function() {
-            if(clicked) {
-              d3.selectAll('path')
-                .style("fill-opacity", function(d) {
-                  return 1;
-                });
-              clicked = false;
-            }
-          });
+    color
+      .domain([0,1,2])
+      .range(["#e5e5e5", "#93d7d6", "#49bdba"]);
 
-        var div = d3.select("body")
-          .append("div")
-          .attr("class", "tooltip")
-          .style("opacity", 0);
-        
-        d3.json("data/us-states.json", function(json) {
-          for (var i = 0; i < data.length; i++) {
-            var dataState = data[i]["State"];
-            var dataValue = data[i]["Comprehensive/Partial"] === "Comprehensive" ? 2 : 1;
-            var dataMain = data[i]["Main_text"];
-            var dataNotes = data[i]["Footnote_text"]
+    d3.select(".the-us-map").remove();
 
-            for (var j = 0; j < json.features.length; j++)  {
-              var jsonState = json.features[j].properties.name;
-              if (abrev[dataState] == jsonState) {
-                json.features[j].properties.action = dataValue;
-                json.features[j].properties.main = dataMain;
-                json.features[j].properties.notes = dataNotes;
-                break;
-              }
-            }
-          }
-
-          var paths = svg.selectAll("path")
-            .data(json.features)
-          paths.exit().remove();
-          paths.enter()
-            .append("path")
-            .attr("d", path)
-            .style("stroke", "#fff")
-            .style("stroke-width", "1")
-            .on("mouseover", function(d) {
-              if(!clicked)
-                d3.select(this).style("fill-opacity", 0.7);
-              // div.transition()
-              //     .style("opacity", 1);
-              // div.text(d.properties.name)
-              //     .style("left", (d3.event.pageX) + "px")
-              //     .style("top", (d3.event.pageY - 30) + "px");
-            })
-            .on("mouseout", function(d) {
-              if(!clicked)
-                d3.select(this).style("fill-opacity", 1);
-              // div.transition()
-              //     .style("opacity", 0);
-            })
-            .on("click", stateClicked);
-          paths
-            .style("fill", function(d) { return color(d.properties.action || 0); });
-
-          d3.select(".legend").remove();
-
-          var legend = d3.select(".state-legend").append("svg")
-            .attr("class", "legend")
-            .attr("width", 350)
-            .attr("height", 150)
-            .selectAll("g")
-            .data(color.domain().slice())
-            .enter()
-            .append("g")
-            .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; })
-            .on("mouseover", legendMouseover)
-            .on("mouseout", legendMouseout);
-
-          legend.append("circle")
-            .attr("cx", 9)
-            .attr("cy", 9)
-            .attr("r", 8)
-            .style("fill", color);
-
-          legend.append("text")
-            .data([
-              "No Balance Billing Protections",
-              "Partial Balance Billing Protections",
-              "Comprehensive Balance Billing Protections"
-            ])
-            .attr("x", 24)
-            .attr("y", 9)
-            .attr("dy", ".35em")
-            .style("font-size", function(d) {
-              if(mobile) return 16;
-              else return 14;
-            })
-            .text(function(d) { return d; });
-
-        });
-
-        function stateClicked(d) {
-          svg.selectAll("path")
-            .style("fill-opacity", function(d) {
-              return 0.3;
-            });
-          d3.select(this)
+    var svg = d3.select(".state-viz")
+      .append("svg")
+      .attr("class", "the-us-map")
+      .attr("width", width)
+      .attr("height", height)
+      .on("click", function() {
+        if(clicked) {
+          d3.selectAll('path')
             .style("fill-opacity", function(d) {
               return 1;
             });
-          clicked = true;
-          if(d.state) {
-            selectedState = d.state;
-          }
-          else {
-            selectedState = d.properties.name;
-          }
-          d3.select(".state-info-container").select("h2").text(selectedState);
-          showMainInfo(d);
-          showNotes(d);
-          d3.event.stopPropagation();
+          clicked = false;
         }
+      });
+    
+    d3.json("data/us-states.json", function(json) {
+      for (var i = 0; i < data.length; i++) {
+        var dataState = data[i]["State"];
+        var dataValue = data[i]["Comprehensive/Partial"] === "Comprehensive" ? 2 : 1;
+        var dataMain = data[i]["Main_text"];
+        var dataNotes = data[i]["Footnote_text"];
 
-        function showMainInfo(d) {
-          let billingText = "No Balance Billing Protections";
-          d3.selectAll(".initial-main-text").hide();
-          if(d.properties.action) {
-            d3.select(".full-state-info").select(".main-text").selectAll("li").remove();
-            if(d.properties.action === 2) {
-              d3.select(".billing-type").text("Comprehensive Balance Billing Protections")
-                .classed('color-comp', true)
-                .classed('color-partial', false)
-                .classed('color-none', false);
-            }
-            else {
-              d3.select(".billing-type").text("Partial Balance Billing Protections")
-                .classed('color-comp', false)
-                .classed('color-partial', true)
-                .classed('color-none', false);
-            }
-            let mainText = d.properties.main.trim().split('\n');
-            mainText.forEach((main) => {
-              d3.select(".full-state-info").select(".main-text").append("li").text(main);
-            });
-            d3.select(".full-state-info").show();
+        for (var j = 0; j < json.features.length; j++)  {
+          var jsonState = json.features[j].properties.name;
+          if (abrev[dataState] == jsonState) {
+            json.features[j].properties.action = dataValue;
+            json.features[j].properties.main = dataMain;
+            json.features[j].properties.notes = dataNotes;
+            break;
           }
-          else {
-            d3.select(".full-state-info").hide();
-            d3.select(".billing-type").text(billingText)
-              .classed('color-comp', false)
-              .classed('color-partial', false)
-              .classed('color-none', true);
-          }
-          d3.select(".billing-type").show();
         }
+      }
 
-        function showNotes(d) {
-          d3.select(".notes-container").show();
-          if(d.properties.action) {
-            d3.select(".inner-notes").select(".the-notes").selectAll("p").remove();
-            let notes = d.properties.notes.trim().split('\n');
-            notes.forEach((note) => {
-              d3.select(".inner-notes").select(".the-notes").append("p").text(note);
-            });
-            d3.select(".inner-notes").show();
+      var paths = svg.selectAll("path")
+        .data(json.features)
+      paths.exit().remove();
+      paths.enter()
+        .append("path")
+        .attr("d", path)
+        .attr("class", function(d) {
+          return `state-${d.properties.name.replace(/ /g,'')}`;
+        })
+        .style("stroke", "#fff")
+        .style("stroke-width", "1")
+        .on("mouseover", function(d) {
+          if(!clicked)
+            d3.select(this).style("fill-opacity", 0.7);
+        })
+        .on("mouseout", function(d) {
+          if(!clicked)
+            d3.select(this).style("fill-opacity", 1);
+        })
+        .on("click", stateClicked);
+      paths
+        .style("fill", function(d) { return color(d.properties.action || 0); });
+
+      d3.select(".legend").remove();
+
+      var legend = d3.select(".state-legend").append("svg")
+        .attr("class", "legend")
+        .attr("width", 350)
+        .attr("height", mobile ? 100 : 150)
+        .selectAll("g")
+        .data(color.domain().slice())
+        .enter()
+        .append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; })
+        .on("mouseover", legendMouseover)
+        .on("mouseout", legendMouseout);
+
+      legend.append("circle")
+        .attr("cx", 9)
+        .attr("cy", 9)
+        .attr("r", 8)
+        .style("fill", color);
+
+      legend.append("text")
+        .data([
+          "No Balance Billing Protections",
+          "Partial Balance Billing Protections",
+          "Comprehensive Balance Billing Protections"
+        ])
+        .attr("x", 24)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("font-size", function(d) {
+          if(mobile) return 16;
+          else return 14;
+        })
+        .text(function(d) { return d; });
+
+    });
+
+    function stateClicked(d) {
+      svg.selectAll("path")
+        .style("fill-opacity", function(d) {
+          return 0.3;
+        });
+      d3.select(this)
+        .style("fill-opacity", function(d) {
+          return 1;
+        });
+      if(mobile) {
+        d3.select(".mobile-select-header").hide();
+        d3.select("#state-selector").select(`option[value="${d.properties.name}"]`).attr("selected", true);
+      }
+      clicked = true;
+      d3.select(".state-info-container").select("h2").text(d.properties.name);
+      showMainInfo(d);
+      showNotes(d);
+      d3.event.stopPropagation();
+    }
+
+    function showMainInfo(d) {
+      let billingText = "No Balance Billing Protections";
+      d3.selectAll(".initial-main-text").hide();
+      if(d.properties.action) {
+        d3.select(".full-state-info").select(".main-text").selectAll("li").remove();
+        if(d.properties.action === 2) {
+          d3.select(".billing-type").text("Comprehensive Balance Billing Protections")
+            .classed('color-comp', true)
+            .classed('color-partial', false)
+            .classed('color-none', false);
+        }
+        else {
+          d3.select(".billing-type").text("Partial Balance Billing Protections")
+            .classed('color-comp', false)
+            .classed('color-partial', true)
+            .classed('color-none', false);
+        }
+        let mainText = d.properties.main.trim().split('\n');
+        mainText.forEach((main) => {
+          if(main[0] === "-") {
+            d3.select(".full-state-info").select(".main-text").append("li").attr('class', 'non-bulleted').text(main.slice(2));
           }
           else {
-            d3.select(".inner-notes").hide();
+            d3.select(".full-state-info").select(".main-text").append("li").attr('class', 'bulleted').text(main);
           }
-        }
+        });
+        d3.select(".full-state-info").show();
+      }
+      else {
+        d3.select(".full-state-info").hide();
+        d3.select(".billing-type").text(billingText)
+          .classed('color-comp', false)
+          .classed('color-partial', false)
+          .classed('color-none', true);
+      }
+      d3.select(".billing-type").show();
+    }
+
+    function showNotes(d) {
+      d3.select(".notes-container").show();
+      if(d.properties.action) {
+        d3.select(".inner-notes").select(".the-notes").selectAll("p").remove();
+        let notes = d.properties.notes.trim().split('\n');
+        notes.forEach((note) => {
+          d3.select(".inner-notes").select(".the-notes").append("p").text(note);
+        });
+        d3.select(".inner-notes").show();
+      }
+      else {
+        d3.select(".inner-notes").hide();
       }
     }
 
@@ -276,10 +304,11 @@
           return 1;
         });
     }
-
+  
     function legendMouseout() {
       d3.select(".the-us-map").selectAll("path")
         .style("fill-opacity", 1);
     }
+  }
 
 })();

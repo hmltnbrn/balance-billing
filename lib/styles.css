@@ -79,6 +79,8 @@ h1, h2, h3, h4 {
 }
 
 .graph-top-container {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
 }
 
@@ -118,10 +120,13 @@ h1, h2, h3, h4 {
 
 ul {
   list-style: none;
-  padding-inline-start: 0;
+  -webkit-padding-start: 0;
+          padding-inline-start: 0;
 }
 
 ul li {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   margin-bottom: 8px;
 }
@@ -152,8 +157,12 @@ path:hover {
 
 .state-legend {
   height: 150px;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
 }
 
 .notes-container {

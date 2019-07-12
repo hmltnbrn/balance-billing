@@ -46,7 +46,7 @@
 
   var selection = document.getElementById("state-selector");
 
-  selection.addEventListener("click", function(e) {
+  selection.addEventListener("change", function(e) {
     if(e.target.value !== 'default') {
       document.querySelector(`.state-${e.target.value.replace(/ /g,'')}`).dispatchEvent(new CustomEvent('click'));
     }

@@ -50,6 +50,21 @@
     if(e.target.value !== 'default') {
       document.querySelector(`.state-${e.target.value.replace(/ /g,'')}`).dispatchEvent(new CustomEvent('click'));
     }
+    else {
+      d3.selectAll('path')
+        .style("fill-opacity", function(d) {
+          return 1;
+        });
+      d3.select(".state-info-container").select("h2").text("Select a state");
+      d3.select(".mobile-select-header").show();
+      d3.select(".state-info-container").hide();
+      d3.select("#state-selector").selectAll("option").attr("selected", null);
+      d3.select("#state-selector").select("option[value='default']").attr("selected", true);
+      d3.select(".full-state-info").select(".main-text").selectAll("li").remove();
+      d3.select(".full-state-info").hide();
+      d3.select(".billing-type").hide();
+      d3.select(".notes-container").hide();
+    }
   });
 
   d3.queue()
@@ -109,6 +124,7 @@
     var height = 350;
     var scale = 700;
     var clicked = false;
+    var clickedState = "Default";
 
     if(mobile) {
       d3.select(".graph-top-container")
@@ -151,21 +167,7 @@
               return 1;
             });
           clicked = false;
-          d3.select(".state-info-container").select("h2").text("Select a state");
-          if(mobile) {
-            d3.select(".mobile-select-header").show();
-            d3.select(".state-info-container").hide();
-            d3.select("#state-selector").selectAll("option").attr("selected", null);
-            d3.select("#state-selector").select("option[value='default']").attr("selected", true);
-          }
-          else {
-            d3.selectAll(".initial-main-text").show();
-            d3.select(".state-info-container").select("h2").text("Select a state");
-          }
-          d3.select(".full-state-info").select(".main-text").selectAll("li").remove();
-          d3.select(".full-state-info").hide();
-          d3.select(".billing-type").hide();
-          d3.select(".notes-container").hide();
+          resetToDefault();
         }
       });
     
@@ -252,6 +254,10 @@
     });
 
     function stateClicked(d) {
+      if(clicked && clickedState === d.properties.name) {
+        resetToDefault();
+        return;
+      }
       svg.selectAll("path")
         .style("fill-opacity", function(d) {
           return 0.3;
@@ -266,6 +272,7 @@
         d3.select("#state-selector").select(`option[value="${d.properties.name}"]`).attr("selected", true);
       }
       clicked = true;
+      clickedState = d.properties.name;
       d3.select(".state-info-container").select("h2").text(d.properties.name);
       showMainInfo(d);
       showNotes(d);
@@ -346,6 +353,25 @@
       d3.select(".the-us-map").selectAll("path")
         .style("fill-opacity", 1);
     }
+
+    function resetToDefault() {
+      d3.select(".state-info-container").select("h2").text("Select a state");
+      if(mobile) {
+        d3.select(".mobile-select-header").show();
+        d3.select(".state-info-container").hide();
+        d3.select("#state-selector").selectAll("option").attr("selected", null);
+        d3.select("#state-selector").select("option[value='default']").attr("selected", true);
+      }
+      else {
+        d3.selectAll(".initial-main-text").show();
+        d3.select(".state-info-container").select("h2").text("Select a state");
+      }
+      d3.select(".full-state-info").select(".main-text").selectAll("li").remove();
+      d3.select(".full-state-info").hide();
+      d3.select(".billing-type").hide();
+      d3.select(".notes-container").hide();
+    }
+
   }
 
 })();

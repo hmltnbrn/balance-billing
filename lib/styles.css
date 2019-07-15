@@ -129,11 +129,14 @@ h1, h2, h3, h4 {
   display: -ms-flexbox;
   display: flex;
   margin-bottom: 8px;
+  padding-left: 0;
 }
 
 .full-state-info ul.main-text li:before {
   font-size: 100%;
   padding-right: 5px;
+  position: unset;
+  color: #000000;
 }
 
 .full-state-info ul.main-text li.non-bulleted:before {

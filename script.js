@@ -84,10 +84,27 @@
     else {
       mobile = false;
     }
-    renderMap();
+    var url = new URLSearchParams(window.location.search);
+    var urlState = url.get("state");
+    var firstState;
+    if(urlState) {
+      if(abrev[urlState.toUpperCase()]) {
+        firstState = abrev[urlState.toUpperCase()]
+          .split(' ')
+          .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+          .join('');
+      }
+      else if(Object.values(abrev).map(val => val.toLowerCase()).indexOf(urlState.toLowerCase()) > -1) {
+        firstState = urlState.toLowerCase()
+          .split(' ')
+          .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+          .join('');
+      }
+    }
+    renderMap(firstState);
   }
 
-  function renderMap() {
+  function renderMap(firstState) {
     var width = 500;
     var height = 350;
     var scale = 700;
@@ -134,6 +151,21 @@
               return 1;
             });
           clicked = false;
+          d3.select(".state-info-container").select("h2").text("Select a state");
+          if(mobile) {
+            d3.select(".mobile-select-header").show();
+            d3.select(".state-info-container").hide();
+            d3.select("#state-selector").selectAll("option").attr("selected", null);
+            d3.select("#state-selector").select("option[value='default']").attr("selected", true);
+          }
+          else {
+            d3.selectAll(".initial-main-text").show();
+            d3.select(".state-info-container").select("h2").text("Select a state");
+          }
+          d3.select(".full-state-info").select(".main-text").selectAll("li").remove();
+          d3.select(".full-state-info").hide();
+          d3.select(".billing-type").hide();
+          d3.select(".notes-container").hide();
         }
       });
     
@@ -213,6 +245,10 @@
         })
         .text(function(d) { return d; });
 
+        if(firstState) {
+          document.querySelector(`.state-${firstState}`).dispatchEvent(new CustomEvent('click'));
+        }
+
     });
 
     function stateClicked(d) {
@@ -226,6 +262,7 @@
         });
       if(mobile) {
         d3.select(".mobile-select-header").hide();
+        d3.select(".state-info-container").show();
         d3.select("#state-selector").select(`option[value="${d.properties.name}"]`).attr("selected", true);
       }
       clicked = true;
